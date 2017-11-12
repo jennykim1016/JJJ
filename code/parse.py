@@ -22,55 +22,44 @@ filestream = open('label-abstract.txt', 'a')
 # Base api query url
 base_url = 'http://export.arxiv.org/api/query?';
 
+max_results = 30
+
 categories = []
 with open('../data/tags.txt') as f:
 	tags = f.readlines()
 	for tag in tags:
 		categories.append(tag.split('\t')[0])
-
-# Search parameters
-search_query = 'cat:astro-ph' # search for electron in all fields
-start = 0                     # retreive the first 5 results
-max_results = 30 # for now, we can have 30 results per category
-
-query = 'search_query=%s&start=%i&max_results=%i' % (search_query,
-                                                     start,
-                                                     max_results)
-
-# Opensearch metadata such as totalResults, startIndex, 
-# and itemsPerPage live in the opensearch namespase.
-# Some entry metadata lives in the arXiv namespace.
-# This is a hack to expose both of these namespaces in
-# feedparser v4.1
-feedparser._FeedParserMixin.namespaces['http://a9.com/-/spec/opensearch/1.1/'] = 'opensearch'
-feedparser._FeedParserMixin.namespaces['http://arxiv.org/schemas/atom'] = 'arxiv'
+		for category in categories:
+			search_query = 'cat:' + category
+			query = 'search_query=%s&start=%i&max_results=%i' % (search_query, start, max_results)
+			feedparser._FeedParserMixin.namespaces['http://a9.com/-/spec/opensearch/1.1/'] = 'opensearch'
+			feedparser._FeedParserMixin.namespaces['http://arxiv.org/schemas/atom'] = 'arxiv'
 
 # perform a GET request using the base_url and query
-response = urllib.urlopen(base_url+query).read()
+			response = urllib.urlopen(base_url+query).read()
 
 # change author -> contributors (because contributors is a list)
-response = response.replace('author','contributor')
+			response = response.replace('author','contributor')
 
 # parse the response using feedparser
-feed = feedparser.parse(response)
+			feed = feedparser.parse(response)
 
 # print out feed information
-print 'Feed title: %s' % feed.feed.title
-print 'Feed last updated: %s' % feed.feed.updated
+			print 'Feed title: %s' % feed.feed.title
+			print 'Feed last updated: %s' % feed.feed.updated
 
 # print opensearch metadata
-print 'totalResults for this query: %s' % feed.feed.opensearch_totalresults
-print 'itemsPerPage for this query: %s' % feed.feed.opensearch_itemsperpage
-print 'startIndex for this query: %s'   % feed.feed.opensearch_startindex
+			print 'totalResults for this query: %s' % feed.feed.opensearch_totalresults
+			print 'itemsPerPage for this query: %s' % feed.feed.opensearch_itemsperpage
+			print 'startIndex for this query: %s'   % feed.feed.opensearch_startindex
 
 # Run through each entry, and print out information
-for entry in feed.entries:
-    # saving the ID in the first line
-    filestream.write('<abstract>')
-    filestream.write('\n'+entry.id.split('/abs/')[-1])
+			for entry in feed.entries:
+                filestream.write('<abstract>')
+    			filestream.write('\n'+entry.id.split('/abs/')[-1])
     # primary category in the second line
-    filestream.write('\n'+entry.tags[0]['term'])
-    filestream.write('\n'+entry.summary+'\n')
-    filestream.write('\n')
+    			filestream.write('\n'+entry.tags[0]['term'])
+    			filestream.write('\n'+entry.summary+'\n')
+    			filestream.write('\n')
 
 filestream.close()
