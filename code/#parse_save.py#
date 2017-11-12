@@ -1,0 +1,13 @@
+import urllib
+import feedparser
+
+# Base api query url
+base_url = 'http://export.arxiv.org/api/query?';
+
+# Search parameters                                                                                                                                               search_query = 'cat:astro-ph' # search for electron in all fields                                                                                                                               
+start = 0                     # retreive the first 5 results                                                                                                                                    
+max_results = 30 # for now, we can have 30 results per category                                                                                                                                 
+
+query = 'search_query=%s&start=%i&max_results=%i' % (search_query,
+                                                     start,
+                                                     max_results)
