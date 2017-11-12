@@ -21,6 +21,12 @@ import feedparser
 # Base api query url
 base_url = 'http://export.arxiv.org/api/query?';
 
+categories = []
+with open('../data/tags.txt') as f:
+	tags = f.readlines()
+	for tag in tags:
+		categories.append(tag.split('\t')[0])
+
 # Search parameters
 search_query = 'cat:astro-ph' # search for electron in all fields
 start = 0                     # retreive the first 5 results
