@@ -65,11 +65,5 @@ for category in categories:
 		filestream.write('\n<abstract>')
 		filestream.write('\n'+entry.summary+'\n')
 		filestream.write('\n')
-	# 	filestream.write('<abstract>')
-    # 	filestream.write('\n'+entry.id.split('/abs/')[-1])
-    # # primary category in the second line
-    # 	filestream.write('\n'+entry.tags[0]['term'])
-    # 	filestream.write('\n'+entry.summary+'\n')
-    # 	filestream.write('\n')
 
 filestream.close()
