@@ -18,7 +18,7 @@ with it, but please play nice with the arXiv API!
 import urllib
 import feedparser
 
-filestream = open('../data/label-abstract.txt', 'a')
+filestream = open('../data/label-abstract.txt', 'w')
 # Base api query url
 base_url = 'http://export.arxiv.org/api/query?';
 
