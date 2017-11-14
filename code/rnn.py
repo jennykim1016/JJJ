@@ -6,14 +6,10 @@ import sklearn
 import cPickle
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.svm import SVC, LinearSVC
+from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import classification_report, f1_score, accuracy_score, confusion_matrix
 from sklearn.pipeline import Pipeline
-from sklearn.grid_search import GridSearchCV
-from sklearn.cross_validation import StratifiedKFold, cross_val_score, train_test_split
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.learning_curve import learning_curve
 
 # https://radimrehurek.com/data_science_python/
 
@@ -45,7 +41,7 @@ bow_transformer = CountVectorizer(analyzer=split_into_lemmas).fit(df.Abstract)
 abstracts_bow  = bow_transformer.transform(df.Abstract)
 tfidf_transformer = TfidfTransformer().fit(abstracts_bow)
 abstracts_tfidf = tfidf_transformer.transform(abstracts_bow)
-classifier = MultinomialNB().fit(abstracts_tfidf, df.Category)
+classifier = MLPClassifier().fit(abstracts_tfidf, df.Category)
 all_predictions = classifier.predict(abstracts_tfidf)
 
 print 'accuracy', accuracy_score(df.Category, all_predictions)
