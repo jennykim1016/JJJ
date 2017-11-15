@@ -14,6 +14,7 @@ from sklearn.grid_search import GridSearchCV
 from sklearn.cross_validation import StratifiedKFold, cross_val_score, train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.learning_curve import learning_curve
+from sklearn.model_selection import train_test_split
 
 # https://radimrehurek.com/data_science_python/
 
@@ -41,12 +42,19 @@ df = pandas.DataFrame(data = dataset, columns= ['ID', 'Category', 'Abstract'])
 # 1. Count how many times a word occurs in each abstract (term frequency)
 # 2. Weight the counts so that frequent tokens across abstracts get lower weight (inverse document frequency)
 # 3. Normalize the vectors to unit length to abstract from original text length (L2 norm)
-bow_transformer = CountVectorizer(analyzer=split_into_lemmas).fit(df.Abstract)
-abstracts_bow  = bow_transformer.transform(df.Abstract)
-tfidf_transformer = TfidfTransformer().fit(abstracts_bow)
-abstracts_tfidf = tfidf_transformer.transform(abstracts_bow)
-classifier = MultinomialNB().fit(abstracts_tfidf, df.Category)
-all_predictions = classifier.predict(abstracts_tfidf)
+trainData, testData = train_test_split(df)
 
-print 'accuracy', accuracy_score(df.Category, all_predictions)
-print classification_report(df.Category, all_predictions)
+vectorizer = CountVectorizer(analyzer=split_into_lemmas)
+tfidfTransformer = TfidfTransformer()
+classifier = MultinomialNB()
+
+abstracts_bow_train = vectorizer.fit_transform(trainData.Abstract)
+abstracts_tfidf_train = tfidfTransformer.fit_transform(abstracts_bow_train)
+classifier = classifier.fit(abstracts_tfidf_train, trainData.Category)
+
+abstracts_bow_test = vectorizer.transform(testData.Abstract)
+abstracts_tfidf_test = tfidfTransformer.transform(abstracts_bow_test)
+test_predictions = classifier.predict(abstracts_tfidf_test)
+
+print 'accuracy', accuracy_score(testData.Category, test_predictions)
+print classification_report(testData.Category, test_predictions)
