@@ -36,9 +36,9 @@ df = pandas.DataFrame(data = dataset, columns= ['ID', 'Category', 'Abstract'])
 # Represent each abstract as a list of tokens (lemmas) then covert into vector
 # In a bag-of-words model:
 # 1. Count how many times a word occurs in each abstract (term frequency)
-# 2. Weight counts so that frequent tokens across abstracts get lower weight (inverse document frequency)
+# 2. Weigh counts so that frequent tokens across abstracts get lower weight (inverse document frequency)
 # 3. Normalize vectors to abstract from original text length (L2 norm)
-trainData, testData = train_test_split(df)
+trainData, testData = train_test_split(df, test_size=0.1)
 
 vectorizer = CountVectorizer(analyzer=split_into_lemmas)
 tfidfTransformer = TfidfTransformer()
