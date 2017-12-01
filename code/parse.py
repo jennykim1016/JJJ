@@ -61,6 +61,7 @@ for category in categories:
 		filestream.write('\n'+entry.id.split('/abs/')[-1])
 		# primary category in the second line
 		filestream.write('\n<category>')
+		print entry.tags
 		filestream.write('\n'+entry.tags[0]['term'])
 		filestream.write('\n<abstract>')
 		filestream.write('\n'+entry.summary+'\n')
