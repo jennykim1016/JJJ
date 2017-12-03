@@ -27,44 +27,55 @@ start = 0
 
 categories = []
 with open('../data/tags.txt') as f:
-	tags = f.readlines()
-	for tag in tags:
-		categories.append(tag.split('\t')[0])
+    tags = f.readlines()
+    for tag in tags:
+        categories.append(tag.split('\t')[0])
 
 for category in categories:
-	search_query = 'cat:' + category
-	query = 'search_query=%s&start=%i&max_results=%i' % (search_query, start, max_results)
-	feedparser._FeedParserMixin.namespaces['http://a9.com/-/spec/opensearch/1.1/'] = 'opensearch'
-	feedparser._FeedParserMixin.namespaces['http://arxiv.org/schemas/atom'] = 'arxiv'
+    search_query = 'cat:' + category
+    query = 'search_query=%s&start=%i&max_results=%i' % (search_query, start, max_results)
+    feedparser._FeedParserMixin.namespaces['http://a9.com/-/spec/opensearch/1.1/'] = 'opensearch'
+    feedparser._FeedParserMixin.namespaces['http://arxiv.org/schemas/atom'] = 'arxiv'
 
 # perform a GET request using the base_url and query
-	response = urllib.urlopen(base_url+query).read()
+    response = urllib.urlopen(base_url+query).read()
 
 # change author -> contributors (because contributors is a list)
-	response = response.replace('author','contributor')
+    response = response.replace('author','contributor')
 
 # parse the response using feedparser
-	feed = feedparser.parse(response)
+    feed = feedparser.parse(response)
 
 # print out feed information
-	print 'Feed title: %s' % feed.feed.title
-	print 'Feed last updated: %s' % feed.feed.updated
+    #print 'Feed title: %s' % feed.feed.title
+    #print 'Feed last updated: %s' % feed.feed.updated
 
 # print opensearch metadata
-	print 'totalResults for this query: %s' % feed.feed.opensearch_totalresults
-	print 'itemsPerPage for this query: %s' % feed.feed.opensearch_itemsperpage
-	print 'startIndex for this query: %s'   % feed.feed.opensearch_startindex
+    #print 'totalResults for this query: %s' % feed.feed.opensearch_totalresults
+    #print 'itemsPerPage for this query: %s' % feed.feed.opensearch_itemsperpage
+    #print 'startIndex for this query: %s'   % feed.feed.opensearch_startindex
 
 # Run through each entry, and print out information
-	for entry in feed.entries:
-		filestream.write('<id>')
-		filestream.write('\n'+entry.id.split('/abs/')[-1])
-		# primary category in the second line
-		filestream.write('\n<category>')
-		print entry.tags
-		filestream.write('\n'+entry.tags[0]['term'])
-		filestream.write('\n<abstract>')
-		filestream.write('\n'+entry.summary+'\n')
-		filestream.write('\n')
+    for entry in feed.entries:
+        filestream.write('<id>')
+        filestream.write('\n'+entry.id.split('/abs/')[-1])
+        # primary category in the second line
+        filestream.write('\n<category>')
+        # Only (math.ST, stat.TH), (math-ph, math.MP), and (math.IT, cs.IT) are same
+        # 0.61 precision, 0.55 recall, 0.54 f-score with combined.
+        # 0.63 precision, 0.59 recall, 0.58 f-score with regular.
+        #tags = [tag['term'] for tag in entry.tags]
+        #if "math-ph" in tags:
+        #    filestream.write('\nmath.MP')
+        #elif "math.ST" in tags:
+        #    filestream.write('\nstat.TH')
+        #elif "math.IT" in tags:
+        #    filestream.write('\ncs.IT')
+        #else:
+        #    filestream.write('\n'+entry.tags[0]['term'])
+        filestream.write('\n'+entry.tags[0]['term'])
+        filestream.write('\n<abstract>')
+        filestream.write('\n'+entry.summary+'\n')
+        filestream.write('\n')
 
 filestream.close()
