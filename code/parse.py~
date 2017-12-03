@@ -65,10 +65,10 @@ for category in categories:
 		filestream.write('\n<category>')
 		print entry.tags
 		filestream.write('\n')
-		for tags in entry.tags:
-			for tag in tags:
-				filestream.write(tag[0]['term'])
-				filestream.write(',')
+		for tag in entry.tags:
+			print tag[0]
+			filestream.write(tag[0]['term'])
+			filestream.write(',')
 		filestream.write('\n<abstract>')
 		filestream.write('\n'+entry.summary+'\n')
 		filestream.write('\n')
