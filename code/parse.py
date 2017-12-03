@@ -27,35 +27,33 @@ start = 0
 
 categories = []
 with open('../data/tags.txt') as f:
-	tags = f.readlines()
-#	categories.append(tags[0].split('\t')[0])
-	categories.append("cs.IT")
-#for tag in tags:
-	#	categories.append(tag.split('\t')[0])
+    tags = f.readlines()
+    for tag in tags:
+        categories.append(tag.split('\t')[0])
 
 for category in categories:
-	search_query = 'cat:' + category
-	query = 'search_query=%s&start=%i&max_results=%i' % (search_query, start, max_results)
-	feedparser._FeedParserMixin.namespaces['http://a9.com/-/spec/opensearch/1.1/'] = 'opensearch'
-	feedparser._FeedParserMixin.namespaces['http://arxiv.org/schemas/atom'] = 'arxiv'
+    search_query = 'cat:' + category
+    query = 'search_query=%s&start=%i&max_results=%i' % (search_query, start, max_results)
+    feedparser._FeedParserMixin.namespaces['http://a9.com/-/spec/opensearch/1.1/'] = 'opensearch'
+    feedparser._FeedParserMixin.namespaces['http://arxiv.org/schemas/atom'] = 'arxiv'
 
 # perform a GET request using the base_url and query
-	response = urllib.urlopen(base_url+query).read()
+    response = urllib.urlopen(base_url+query).read()
 
 # change author -> contributors (because contributors is a list)
-	response = response.replace('author','contributor')
+    response = response.replace('author','contributor')
 
 # parse the response using feedparser
-	feed = feedparser.parse(response)
+    feed = feedparser.parse(response)
 
 # print out feed information
-	print 'Feed title: %s' % feed.feed.title
-	print 'Feed last updated: %s' % feed.feed.updated
+    #print 'Feed title: %s' % feed.feed.title
+    #print 'Feed last updated: %s' % feed.feed.updated
 
 # print opensearch metadata
-	print 'totalResults for this query: %s' % feed.feed.opensearch_totalresults
-	print 'itemsPerPage for this query: %s' % feed.feed.opensearch_itemsperpage
-	print 'startIndex for this query: %s'   % feed.feed.opensearch_startindex
+    #print 'totalResults for this query: %s' % feed.feed.opensearch_totalresults
+    #print 'itemsPerPage for this query: %s' % feed.feed.opensearch_itemsperpage
+    #print 'startIndex for this query: %s'   % feed.feed.opensearch_startindex
 
 # Run through each entry, and print out information
 	for entry in feed.entries:
