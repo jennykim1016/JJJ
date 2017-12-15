@@ -1,5 +1,3 @@
-# author - Richard Liao
-# Dec 26 2016
 import numpy as np
 import pandas as pd
 import cPickle
@@ -30,6 +28,41 @@ MAX_SEQUENCE_LENGTH = 300
 MAX_NB_WORDS = 10000
 EMBEDDING_DIM = 100
 VALIDATION_SPLIT = 0.2
+
+def precision(y_true, y_pred):
+    """Precision metric.
+    Only computes a batch-wise average of precision.
+    Computes the precision, a metric for multi-label classification of
+    how many selected items are relevant.
+    """
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+    precision = true_positives / (predicted_positives + K.epsilon())
+    return precision
+
+def recall(y_true, y_pred):
+     """Recall metric.
+     Only computes a batch-wise average of recall.
+     Computes the recall, a metric for multi-label classification of
+     how many relevant items are selected.
+     """
+     true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+     possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+     recall = true_positives / (possible_positives + K.epsilon())
+     return recall
+
+def fmeasure(y_true, y_pred):
+    """Computes the f-measure, the harmonic mean of precision and recall.
+    Here it is only computed as a batch-wise average, not globally.
+    """
+    beta = 1
+    if K.sum(K.round(K.clip(y_true, 0, 1))) == 0:
+        return 0
+    p = precision(y_true, y_pred)
+    r = recall(y_true, y_pred)
+    bb = beta ** 2
+    fbeta_score = (1 + bb) * (p * r) / (bb * p + r + K.epsilon())
+    return fbeta_score
 
 def clean_str(string):
     """
@@ -113,67 +146,9 @@ preds = Dense(127, activation='softmax')(l_lstm)
 model = Model(sequence_input, preds)
 model.compile(loss='categorical_crossentropy',
               optimizer='rmsprop',
-              metrics=['acc'])
+              metrics=['acc', fmeasure, precision, recall])
 
 print("model fitting - Bidirectional LSTM")
 model.summary()
 model.fit(x_train, y_train, validation_data=(x_val, y_val),
-          epochs=1, batch_size=100)
-
-# Attention GRU network
-class AttLayer(Layer):
-    def __init__(self, **kwargs):
-        self.init = initializers.get('normal')
-        #self.input_spec = [InputSpec(ndim=3)]
-        super(AttLayer, self).__init__(**kwargs)
-
-    def build(self, input_shape):
-        assert len(input_shape)==3
-        #self.W = self.init((input_shape[-1],1))
-        self.W = self.init((input_shape[-1],))
-        #self.input_spec = [InputSpec(shape=input_shape)]
-        self.trainable_weights = [self.W]
-        super(AttLayer, self).build(input_shape)  # be sure you call this somewhere!
-
-    def call(self, x, mask=None):
-        eij = K.tanh(K.dot(x, self.W))
-
-        ai = K.exp(eij)
-        weights = ai/K.sum(ai, axis=1).dimshuffle(0,'x')
-
-        weighted_input = x*weights.dimshuffle(0,1,'x')
-        return weighted_input.sum(axis=1)
-
-    def get_output_shape_for(self, input_shape):
-        return (input_shape[0], input_shape[-1])
-
-embedding_matrix = np.random.random((len(word_index) + 1, EMBEDDING_DIM))
-for word, i in word_index.items():
-    embedding_vector = embeddings_index.get(word)
-    if embedding_vector is not None:
-        # words not found in embedding index will be all-zeros.
-        embedding_matrix[i] = embedding_vector
-
-embedding_layer = Embedding(len(word_index) + 1,
-                            EMBEDDING_DIM,
-                            weights=[embedding_matrix],
-                            input_length=MAX_SEQUENCE_LENGTH,
-                            trainable=True)
-
-
-
-sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
-embedded_sequences = embedding_layer(sequence_input)
-l_gru = Bidirectional(GRU(100, return_sequences=True))(embedded_sequences)
-l_att = AttLayer()(l_gru)
-preds = Dense(127, activation='softmax')(l_att)
-model = Model(sequence_input, preds)
-model.compile(loss='categorical_crossentropy',
-              optimizer='rmsprop',
-              metrics=['acc'])
-
-
-print("model fitting - attention GRU network")
-model.summary()
-model.fit(x_train, y_train, validation_data=(x_val, y_val),
-          epochs=1, batch_size=100)
+          epochs=50, batch_size=100)
