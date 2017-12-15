@@ -6,4 +6,4 @@ Jenny Kim, Janel Jihyeon Lee, James Li
 
 "Data" File: We mainly used `label-abstract-100.txt` which has 100 entries for each category.
 
-Please use *python 2.7* to run all the codes.
+Please use **python 2.7** to run all the codes.
