@@ -13,18 +13,15 @@ import os
 
 os.environ['KERAS_BACKEND']='theano'
 
+from keras import backend as K
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 from keras.utils.np_utils import to_categorical
 
 from keras.layers import Embedding
 from keras.layers import Dense, Input, Flatten
-from keras.layers import Conv1D, MaxPooling1D, Embedding, Merge, Dropout, LSTM, GRU, Bidirectional
+from keras.layers import Conv1D, MaxPooling1D, Embedding, Merge, Dropout
 from keras.models import Model
-
-from keras import backend as K
-from keras.engine.topology import Layer, InputSpec
-from keras import initializers
 
 MAX_SEQUENCE_LENGTH = 300
 MAX_NB_WORDS = 10000
@@ -76,6 +73,7 @@ def clean_str(string):
     string = re.sub(r"\"", "", string)
     return string.strip().lower()
 
+# data_train = pd.read_csv('~/Testground/data/imdb/labeledTrainData.tsv', sep='\t')
 data_train = pd.read_csv('../data/trainset.csv', sep='\t')
 print data_train.shape
 
@@ -112,7 +110,7 @@ y_train = labels[:-nb_validation_samples]
 x_val = data[-nb_validation_samples:]
 y_val = labels[-nb_validation_samples:]
 
-print('Traing and validation set number of positive and negative reviews')
+print('Number of positive and negative reviews in traing and validation set ')
 print y_train.sum(axis=0)
 print y_val.sum(axis=0)
 
@@ -126,7 +124,7 @@ for line in f:
     embeddings_index[word] = coefs
 f.close()
 
-print('Total %s word vectors.' % len(embeddings_index))
+print('Total %s word vectors in Glove 6B 100d.' % len(embeddings_index))
 
 embedding_matrix = np.random.random((len(word_index) + 1, EMBEDDING_DIM))
 for word, i in word_index.items():
@@ -141,16 +139,32 @@ embedding_layer = Embedding(len(word_index) + 1,
                             input_length=MAX_SEQUENCE_LENGTH,
                             trainable=True)
 
+convs = []
+filter_sizes = [3,4,5]
+
 sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
 embedded_sequences = embedding_layer(sequence_input)
-l_lstm = Bidirectional(LSTM(100))(embedded_sequences)
-preds = Dense(127, activation='softmax')(l_lstm)
+
+for fsz in filter_sizes:
+    l_conv = Conv1D(nb_filter=128,filter_length=fsz,activation='relu')(embedded_sequences)
+    l_pool = MaxPooling1D(5)(l_conv)
+    convs.append(l_pool)
+
+l_merge = Merge(mode='concat', concat_axis=1)(convs)
+l_cov1= Conv1D(128, 5, activation='relu')(l_merge)
+l_pool1 = MaxPooling1D(5)(l_cov1)
+l_cov2 = Conv1D(128, 5, activation='relu')(l_pool1)
+l_pool2 = MaxPooling1D(30)(l_cov2)
+l_flat = Flatten()(l_pool2)
+l_dense = Dense(128, activation='relu')(l_flat)
+preds = Dense(127, activation='softmax')(l_dense)
+
 model = Model(sequence_input, preds)
 model.compile(loss='categorical_crossentropy',
               optimizer='rmsprop',
               metrics=['acc', fmeasure, precision, recall])
 
-print("model fitting - Bidirectional LSTM")
+print("model fitting - more complex convolutional neural network")
 model.summary()
 model.fit(x_train, y_train, validation_data=(x_val, y_val),
-          epochs=50, batch_size=100)
+          nb_epoch=20, batch_size=50)
